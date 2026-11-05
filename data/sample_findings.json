@@ -1,0 +1,14 @@
+[
+  {"finding_type": "s3_public_access", "resource_id": "s3://acme-customer-exports", "source": "config-scanner"},
+  {"finding_type": "s3_public_access", "resource_id": "s3://acme-dev-scratch", "source": "config-scanner"},
+  {"finding_type": "sg_open_ssh", "resource_id": "sg-0a12bc34de56", "source": "config-scanner"},
+  {"finding_type": "sg_open_ssh", "resource_id": "sg-0f77aa10b2c3", "source": "config-scanner"},
+  {"finding_type": "iam_user_no_mfa", "resource_id": "iam:user/jlee", "source": "iam-audit"},
+  {"finding_type": "rds_unencrypted", "resource_id": "rds:orders-db", "source": "config-scanner"},
+  {"finding_type": "rds_unencrypted", "resource_id": "rds:analytics-staging", "source": "config-scanner"},
+  {"finding_type": "cloudtrail_disabled", "resource_id": "cloudtrail:org-trail", "source": "config-scanner"},
+  {"finding_type": "s3_public_access", "resource_id": "s3://legacy-backup-2019", "source": "config-scanner"},
+  {"finding_type": "S3_PUBLIC_ACCESS", "resource_id": "s3://acme-customer-exports", "source": "weekly-rescan"},
+  {"finding_type": "s3_public_access", "resource_id": "s3://acme-customer-exports", "region": "eu-west-1", "source": "weekly-rescan"},
+  {"finding_type": "kms_key_rotation_off", "resource_id": "kms:key/payments", "severity": "low", "source": "config-scanner"}
+]

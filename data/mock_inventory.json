@@ -1,0 +1,10 @@
+[
+  {"resource_id": "s3://acme-customer-exports", "resource_type": "s3_bucket", "owner": "priya.nair", "team": "data-platform", "environment": "prod", "account_id": "111122223333", "data_classification": "restricted", "internet_facing": true},
+  {"resource_id": "s3://acme-dev-scratch", "resource_type": "s3_bucket", "owner": "tom.becker", "team": "data-platform", "environment": "dev", "account_id": "444455556666", "data_classification": "internal", "internet_facing": false},
+  {"resource_id": "sg-0a12bc34de56", "resource_type": "security_group", "owner": "maria.santos", "team": "platform-eng", "environment": "prod", "account_id": "111122223333", "data_classification": "internal", "internet_facing": true},
+  {"resource_id": "sg-0f77aa10b2c3", "resource_type": "security_group", "owner": "tom.becker", "team": "data-platform", "environment": "dev", "account_id": "444455556666", "data_classification": "internal", "internet_facing": false},
+  {"resource_id": "iam:user/jlee", "resource_type": "iam_user", "owner": "jlee", "team": "finance-apps", "environment": "prod", "account_id": "111122223333", "data_classification": "confidential", "internet_facing": false},
+  {"resource_id": "rds:orders-db", "resource_type": "rds_instance", "owner": "maria.santos", "team": "commerce", "environment": "prod", "account_id": "111122223333", "data_classification": "restricted", "internet_facing": false},
+  {"resource_id": "rds:analytics-staging", "resource_type": "rds_instance", "owner": "priya.nair", "team": "data-platform", "environment": "staging", "account_id": "777788889999", "data_classification": "confidential", "internet_facing": false},
+  {"resource_id": "cloudtrail:org-trail", "resource_type": "cloudtrail", "owner": "security-eng", "team": "security-eng", "environment": "prod", "account_id": "111122223333", "data_classification": "internal", "internet_facing": false}
+]

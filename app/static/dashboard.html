@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security findings</title>
+<style>
+  :root {
+    --ink: #1b2430;
+    --muted: #5d6b7a;
+    --line: #d9dee5;
+    --bg: #fbfbfc;
+    --row-hover: #f1f4f8;
+    --p1: #b42318;
+    --p2: #c4641a;
+    --p3: #8c7a14;
+    --p4: #5d6b7a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem clamp(1rem, 4vw, 3rem);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 1.25rem; }
+  h2 { font-size: 0.95rem; margin: 1rem 0 0.25rem; }
+
+  .counts { display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 1.5rem; }
+  .count { border-left: 4px solid var(--line); padding-left: 0.75rem; }
+  .count strong { display: block; font-size: 1.75rem; line-height: 1.1; }
+  .count span { color: var(--muted); font-size: 0.85rem; }
+  .count.P1 { border-color: var(--p1); }
+  .count.P2 { border-color: var(--p2); }
+  .count.P3 { border-color: var(--p3); }
+  .count.P4 { border-color: var(--p4); }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+  .filters label { color: var(--muted); font-size: 0.9rem; }
+  select, button {
+    font: inherit;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--ink);
+  }
+  button { cursor: pointer; }
+  button:hover { background: var(--row-hover); }
+  :focus-visible { outline: 2px solid #2860c8; outline-offset: 2px; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 52rem; }
+  th, td { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--line); }
+  th { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
+  tr.row { cursor: pointer; }
+  tr.row:hover { background: var(--row-hover); }
+  td.prio { font-weight: 700; border-left: 4px solid var(--line); }
+  td.prio.P1 { border-left-color: var(--p1); color: var(--p1); }
+  td.prio.P2 { border-left-color: var(--p2); color: var(--p2); }
+  td.prio.P3 { border-left-color: var(--p3); color: var(--p3); }
+  td.prio.P4 { border-left-color: var(--p4); color: var(--p4); }
+  td.resource { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+
+  tr.detail td { background: #fff; padding: 1rem 1.5rem 1.25rem; }
+  tr.detail.hidden { display: none; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 0 2rem; }
+  .detail ul, .detail ol { margin: 0.25rem 0 0; padding-left: 1.25rem; }
+  .actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
+  .empty { color: var(--muted); padding: 2rem 0; }
+</style>
+</head>
+<body>
+  <h1>Security findings</h1>
+
+  <div class="counts" id="counts"></div>
+
+  <div class="filters">
+    <label>Priority
+      <select id="f-priority">
+        <option value="">All</option>
+        <option>P1</option><option>P2</option><option>P3</option><option>P4</option>
+      </select>
+    </label>
+    <label>Environment
+      <select id="f-environment">
+        <option value="">All</option>
+        <option>prod</option><option>staging</option><option>dev</option><option>unknown</option>
+      </select>
+    </label>
+    <label>Status
+      <select id="f-status">
+        <option value="">All</option>
+        <option>open</option><option>acknowledged</option><option>resolved</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Priority</th><th>Score</th><th>Finding</th><th>Resource</th>
+          <th>Environment</th><th>Owner</th><th>Status</th><th>Seen</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="empty" id="empty" hidden>No findings match these filters.</p>
+
+<script>
+const PRIORITIES = ["P1", "P2", "P3", "P4"];
+
+// Everything below builds the page with textContent, never innerHTML,
+// because finding fields come from external scanners and can't be trusted.
+function el(tag, text, className) {
+  const node = document.createElement(tag);
+  if (text != null) node.textContent = text;
+  if (className) node.className = className;
+  return node;
+}
+
+async function api(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) throw new Error(url + " returned " + res.status);
+  return res.json();
+}
+
+async function loadSummary() {
+  const s = await api("/summary");
+  const box = document.getElementById("counts");
+  box.replaceChildren();
+  for (const p of PRIORITIES) {
+    const item = el("div", null, "count " + p);
+    item.append(el("strong", String(s.open_by_priority[p] || 0)), el("span", p + " open"));
+    box.append(item);
+  }
+  const merged = el("div", null, "count");
+  merged.append(el("strong", String(s.duplicates_merged)), el("span", "duplicates merged"));
+  box.append(merged);
+}
+
+function listSection(title, tag, items) {
+  const wrap = el("div");
+  wrap.append(el("h2", title));
+  const list = el(tag);
+  for (const item of items) list.append(el("li", item));
+  wrap.append(list);
+  return wrap;
+}
+
+async function changeStatus(id, status) {
+  await api("/findings/" + id + "/status", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  await refresh();
+}
+
+function renderFinding(tbody, f) {
+  const tr = el("tr", null, "row");
+  tr.tabIndex = 0;
+  tr.append(
+    el("td", f.priority, "prio " + f.priority),
+    el("td", String(f.score)),
+    el("td", f.title),
+    el("td", f.resource_id, "resource"),
+    el("td", f.environment),
+    el("td", f.owner),
+    el("td", f.status),
+    el("td", f.occurrences + "x"),
+  );
+
+  const detail = el("tr", null, "detail hidden");
+  const cell = el("td");
+  cell.colSpan = 8;
+  const grid = el("div", null, "detail-grid");
+  grid.append(
+    listSection("Why this score", "ul", f.reasons),
+    listSection("Suggested remediation", "ol", f.remediation),
+  );
+  const actions = el("div", null, "actions");
+  for (const status of ["open", "acknowledged", "resolved"]) {
+    if (status === f.status) continue;
+    const btn = el("button", "Mark " + status);
+    btn.addEventListener("click", () => changeStatus(f.id, status));
+    actions.append(btn);
+  }
+  cell.append(grid, actions);
+  detail.append(cell);
+
+  const toggle = () => detail.classList.toggle("hidden");
+  tr.addEventListener("click", toggle);
+  tr.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+  });
+  tbody.append(tr, detail);
+}
+
+async function loadFindings() {
+  const params = new URLSearchParams();
+  for (const name of ["priority", "environment", "status"]) {
+    const value = document.getElementById("f-" + name).value;
+    if (value) params.set(name, value);
+  }
+  const findings = await api("/findings?" + params);
+  const tbody = document.getElementById("rows");
+  tbody.replaceChildren();
+  findings.forEach((f) => renderFinding(tbody, f));
+  document.getElementById("empty").hidden = findings.length > 0;
+}
+
+async function refresh() {
+  await Promise.all([loadSummary(), loadFindings()]);
+}
+
+document.querySelectorAll(".filters select").forEach((s) => s.addEventListener("change", loadFindings));
+refresh().catch((err) => {
+  document.getElementById("empty").hidden = false;
+  document.getElementById("empty").textContent = "Could not load findings: " + err.message;
+});
+</script>
+</body>
+</html>
