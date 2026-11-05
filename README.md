@@ -18,8 +18,8 @@ python -m app.seed          # loads data/sample_findings.json into findings.db
 uvicorn app.main:app --reload
 ```
 
-Dashboard: http://127.0.0.1:8000/  
-API docs: http://127.0.0.1:8000/docs
+Dashboard: https://127.0.0.1:8000/  
+API docs: https://127.0.0.1:8000/docs
 
 ## Tests
 
