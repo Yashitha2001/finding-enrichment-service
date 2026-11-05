@@ -3,6 +3,8 @@ import sqlite3
 import threading
 from datetime import datetime, timezone
 
+from .sla import sla_info
+
 STATUSES = ("open", "acknowledged", "resolved")
 
 SCHEMA = """
@@ -99,7 +101,7 @@ class FindingStore:
             ).fetchone()
         return self._to_dict(row) if row else None
 
-    def list(self, priority=None, environment=None, status=None):
+    def list(self, priority=None, environment=None, status=None, overdue=None):
         clauses, params = [], []
         for column, value in (("priority", priority),
                               ("environment", environment),
@@ -113,7 +115,10 @@ class FindingStore:
                 f"SELECT * FROM findings {where} ORDER BY score DESC, last_seen DESC",
                 params,
             ).fetchall()
-        return [self._to_dict(r) for r in rows]
+        findings = [self._to_dict(r) for r in rows]
+        if overdue is not None:
+            findings = [f for f in findings if f["overdue"] == overdue]
+        return findings
 
     def set_status(self, finding_id, status):
         if status not in STATUSES:
@@ -135,9 +140,15 @@ class FindingStore:
                 "SELECT COUNT(*) AS total, "
                 "COALESCE(SUM(occurrences - 1), 0) AS dupes FROM findings"
             ).fetchone()
+            open_rows = self._conn.execute(
+                "SELECT priority, first_seen, status FROM findings WHERE status != 'resolved'"
+            ).fetchall()
         return {
             "total_findings": totals["total"],
             "duplicates_merged": totals["dupes"],
+            "overdue": sum(
+                sla_info(r["priority"], r["first_seen"], r["status"])["overdue"] for r in open_rows
+            ),
             "open_by_priority": {r["priority"]: r["n"] for r in by_priority},
         }
 
@@ -147,4 +158,5 @@ class FindingStore:
         d["reasons"] = json.loads(d["reasons"] or "[]")
         d["remediation"] = json.loads(d["remediation"] or "[]")
         d["internet_facing"] = bool(d["internet_facing"])
+        d.update(sla_info(d["priority"], d["first_seen"], d["status"]))
         return d

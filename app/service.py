@@ -1,19 +1,26 @@
+import logging
+
 from .dedup import fingerprint
 from .models import SEVERITIES, Asset, RawFinding
 from .remediation import get_guidance
 from .scoring import score_finding, to_priority
+from .sla import parse_ts
+
+log = logging.getLogger(__name__)
 
 
 class FindingService:
-    """Glue: take a raw finding, enrich it, score it, store it."""
+    """Glue: take a raw finding, enrich it, score it, store it, alert on P1."""
 
-    def __init__(self, inventory, store):
+    def __init__(self, inventory, store, notifiers=()):
         self.inventory = inventory
         self.store = store
+        self.notifiers = list(notifiers)
 
     def ingest(self, raw: RawFinding):
         guidance = get_guidance(raw.finding_type)
         severity = self._pick_severity(raw, guidance)
+        detected_at = parse_ts(raw.detected_at).isoformat(timespec="seconds") if raw.detected_at else None
 
         asset = self.inventory.lookup(raw.resource_id)
         known = asset is not None
@@ -41,13 +48,24 @@ class FindingService:
             "reasons": reasons,
             "remediation": guidance["steps"],
             "source": raw.source,
-            "detected_at": raw.detected_at,
+            "detected_at": detected_at,
         }
 
         finding_id, duplicate = self.store.upsert(record)
         finding = self.store.get(finding_id)
         finding["duplicate"] = duplicate
+
+        if not duplicate and finding["priority"] == "P1":
+            self._notify(finding)
         return finding
+
+    def _notify(self, finding):
+        for notifier in self.notifiers:
+            try:
+                notifier.send(finding)
+            except Exception:
+                # An alerting outage must never lose the finding itself.
+                log.exception("%s failed for finding %s", type(notifier).__name__, finding["id"])
 
     @staticmethod
     def _pick_severity(raw, guidance):

@@ -3,6 +3,10 @@ import json
 from .models import Asset
 
 
+class InventoryError(Exception):
+    """The inventory backend could not be reached (as opposed to 'not found')."""
+
+
 class Inventory:
     """Stand-in for an AWS asset inventory (Config, Resource Explorer, a CMDB...).
 

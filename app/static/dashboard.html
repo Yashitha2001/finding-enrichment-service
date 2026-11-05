@@ -6,121 +6,123 @@
 <title>Security findings</title>
 <style>
   :root {
-    --ink: #1b2430;
-    --muted: #5d6b7a;
-    --line: #d9dee5;
-    --bg: #fbfbfc;
-    --row-hover: #f1f4f8;
-    --p1: #b42318;
-    --p2: #c4641a;
-    --p3: #8c7a14;
-    --p4: #5d6b7a;
+    --navy: #12294a; --blue: #1f5fbf; --ink: #1d2733; --muted: #667085;
+    --line: #dde3ea; --bg: #f3f5f8; --card: #fff;
+    --p1: #b42318; --p1bg: #fdecea; --p2: #b54708; --p2bg: #fef0e0;
+    --p3: #8a6d00; --p3bg: #fdf6d8; --p4: #475467; --p4bg: #eef1f5;
+    --ok: #067647; --okbg: #e6f5ec;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    padding: 2rem clamp(1rem, 4vw, 3rem);
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-    color: var(--ink);
-    background: var(--bg);
-  }
-  h1 { font-size: 1.5rem; margin: 0 0 1.25rem; }
-  h2 { font-size: 0.95rem; margin: 1rem 0 0.25rem; }
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+  header { background: var(--navy); color: #fff; padding: 0.9rem clamp(1rem, 4vw, 2.5rem); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  header h1 { font-size: 1.15rem; margin: 0; font-weight: 600; }
+  header p { margin: 0; color: #aebfd6; font-size: 0.85rem; }
+  .sync { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: #aebfd6; }
+  .sync button { background: transparent; color: #fff; border-color: #4a6283; }
+  .sync button:hover { background: #1d3a63; }
+  main { max-width: 1320px; margin: 0 auto; padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 3rem; }
 
-  .counts { display: flex; flex-wrap: wrap; gap: 2rem; margin-bottom: 1.5rem; }
-  .count { border-left: 4px solid var(--line); padding-left: 0.75rem; }
-  .count strong { display: block; font-size: 1.75rem; line-height: 1.1; }
-  .count span { color: var(--muted); font-size: 0.85rem; }
-  .count.P1 { border-color: var(--p1); }
-  .count.P2 { border-color: var(--p2); }
-  .count.P3 { border-color: var(--p3); }
-  .count.P4 { border-color: var(--p4); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-top: 4px solid var(--line); border-radius: 6px; padding: 0.8rem 1rem; }
+  .kpi strong { display: block; font-size: 1.9rem; line-height: 1.15; }
+  .kpi span { color: var(--muted); font-size: 0.82rem; }
+  .kpi.P1 { border-top-color: var(--p1); } .kpi.P2 { border-top-color: var(--p2); }
+  .kpi.P3 { border-top-color: var(--p3); } .kpi.P4 { border-top-color: var(--p4); }
+  .kpi.late.hot { border-top-color: var(--p1); background: var(--p1bg); }
+  .kpi.late.hot strong { color: var(--p1); }
 
-  .filters { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
-  .filters label { color: var(--muted); font-size: 0.9rem; }
-  select, button {
-    font: inherit;
-    padding: 0.3rem 0.5rem;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    background: #fff;
-    color: var(--ink);
-  }
+  .mix { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 1rem 0 1.5rem; background: var(--line); }
+  .mix div { transition: flex-grow 0.6s ease; }
+  .mix .P1 { background: var(--p1); } .mix .P2 { background: var(--p2); }
+  .mix .P3 { background: #c9a400; } .mix .P4 { background: #98a2b3; }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); }
+  .toolbar input[type=search] { flex: 1 1 14rem; }
+  .toolbar label { color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+  .count { margin-left: auto; color: var(--muted); }
+  select, input[type=search], button { font: inherit; padding: 0.35rem 0.6rem; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
   button { cursor: pointer; }
-  button:hover { background: var(--row-hover); }
-  :focus-visible { outline: 2px solid #2860c8; outline-offset: 2px; }
+  button:hover { background: var(--bg); }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 
   .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 52rem; }
-  th, td { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--line); }
-  th { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
-  tr.row { cursor: pointer; }
-  tr.row:hover { background: var(--row-hover); }
-  td.prio { font-weight: 700; border-left: 4px solid var(--line); }
-  td.prio.P1 { border-left-color: var(--p1); color: var(--p1); }
-  td.prio.P2 { border-left-color: var(--p2); color: var(--p2); }
-  td.prio.P3 { border-left-color: var(--p3); color: var(--p3); }
-  td.prio.P4 { border-left-color: var(--p4); color: var(--p4); }
-  td.resource { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; }
+  table { width: 100%; border-collapse: collapse; min-width: 60rem; }
+  th, td { text-align: left; padding: 0.65rem 1rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { background: #f8f9fb; color: var(--muted); font-weight: 600; font-size: 0.82rem; }
+  tr.row { cursor: pointer; transition: background 0.15s; }
+  tr.row:hover { background: #f6f8fb; }
+  tr.row.open { background: #eef3fb; }
+  .title { font-weight: 600; }
+  .sub { color: var(--muted); font-size: 0.8rem; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .muted { color: var(--muted); }
 
-  tr.detail td { background: #fff; padding: 1rem 1.5rem 1.25rem; }
+  .pill, .badge, .tag { display: inline-block; border-radius: 999px; padding: 0.1rem 0.6rem; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+  .pill.P1 { color: var(--p1); background: var(--p1bg); } .pill.P2 { color: var(--p2); background: var(--p2bg); }
+  .pill.P3 { color: var(--p3); background: var(--p3bg); } .pill.P4 { color: var(--p4); background: var(--p4bg); }
+  .badge.bad { color: var(--p1); background: var(--p1bg); }
+  .badge.warn { color: var(--p2); background: var(--p2bg); }
+  .badge.ok { color: var(--ok); background: var(--okbg); }
+  .tag { color: var(--p4); background: var(--p4bg); font-weight: 500; }
+  .tag.prod { color: #5b2a86; background: #f1e8fa; font-weight: 600; }
+
+  tr.detail td { background: #fbfcfe; padding: 1.1rem 1.5rem 1.3rem; }
   tr.detail.hidden { display: none; }
-  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 0 2rem; }
-  .detail ul, .detail ol { margin: 0.25rem 0 0; padding-left: 1.25rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 0 2.5rem; }
+  .grid h3 { font-size: 0.85rem; margin: 0 0 0.3rem; }
+  .grid ul, .grid ol { margin: 0; padding-left: 1.2rem; }
   .actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
-  .empty { color: var(--muted); padding: 2rem 0; }
+  .actions button.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .empty { color: var(--muted); padding: 2.5rem 1rem; text-align: center; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
-  <h1>Security findings</h1>
-
-  <div class="counts" id="counts"></div>
-
-  <div class="filters">
-    <label>Priority
-      <select id="f-priority">
-        <option value="">All</option>
-        <option>P1</option><option>P2</option><option>P3</option><option>P4</option>
-      </select>
-    </label>
-    <label>Environment
-      <select id="f-environment">
-        <option value="">All</option>
-        <option>prod</option><option>staging</option><option>dev</option><option>unknown</option>
-      </select>
-    </label>
-    <label>Status
-      <select id="f-status">
-        <option value="">All</option>
-        <option>open</option><option>acknowledged</option><option>resolved</option>
-      </select>
-    </label>
+<header>
+  <div>
+    <h1>Security findings</h1>
+    <p>Configuration risk register</p>
   </div>
+  <div class="sync"><span id="updated">Loading...</span><button id="refresh" type="button">Refresh</button></div>
+</header>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Priority</th><th>Score</th><th>Finding</th><th>Resource</th>
-          <th>Environment</th><th>Owner</th><th>Status</th><th>Seen</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-  </div>
-  <p class="empty" id="empty" hidden>No findings match these filters.</p>
+<main>
+  <section class="kpis" id="kpis"></section>
+  <div class="mix" id="mix" aria-hidden="true"></div>
+
+  <section class="panel">
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Search finding, resource or owner" aria-label="Search findings">
+      <select id="f-priority" aria-label="Priority"><option value="">All priorities</option><option>P1</option><option>P2</option><option>P3</option><option>P4</option></select>
+      <select id="f-environment" aria-label="Environment"><option value="">All environments</option><option>prod</option><option>staging</option><option>dev</option><option>unknown</option></select>
+      <select id="f-status" aria-label="Status"><option value="">All statuses</option><option>open</option><option>acknowledged</option><option>resolved</option></select>
+      <label><input type="checkbox" id="f-overdue"> Overdue only</label>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Priority</th><th>Finding</th><th>Environment</th><th>Owner</th><th>SLA</th><th>Status</th><th>Seen</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="empty" hidden>No findings match these filters.</p>
+  </section>
+</main>
 
 <script>
 const PRIORITIES = ["P1", "P2", "P3", "P4"];
+const expanded = new Set();
+let findings = [];
 
-// Everything below builds the page with textContent, never innerHTML,
-// because finding fields come from external scanners and can't be trusted.
+// Page content is built with textContent only: finding fields come from
+// external scanners and must never be treated as HTML.
 function el(tag, text, className) {
   const node = document.createElement(tag);
   if (text != null) node.textContent = text;
   if (className) node.className = className;
   return node;
 }
+const $ = (id) => document.getElementById(id);
 
 async function api(url, options) {
   const res = await fetch(url, options);
@@ -128,100 +130,144 @@ async function api(url, options) {
   return res.json();
 }
 
-async function loadSummary() {
-  const s = await api("/summary");
-  const box = document.getElementById("counts");
-  box.replaceChildren();
-  for (const p of PRIORITIES) {
-    const item = el("div", null, "count " + p);
-    item.append(el("strong", String(s.open_by_priority[p] || 0)), el("span", p + " open"));
-    box.append(item);
-  }
-  const merged = el("div", null, "count");
-  merged.append(el("strong", String(s.duplicates_merged)), el("span", "duplicates merged"));
-  box.append(merged);
+function fmtHours(h) {
+  if (h < 1) return Math.max(1, Math.round(h * 60)) + "m";
+  if (h < 48) return String(Math.round(h * 10) / 10) + "h";
+  return Math.round(h / 24) + "d";
 }
 
-function listSection(title, tag, items) {
-  const wrap = el("div");
-  wrap.append(el("h2", title));
-  const list = el(tag);
-  for (const item of items) list.append(el("li", item));
-  wrap.append(list);
-  return wrap;
+function slaBadge(f) {
+  if (f.status === "resolved" || f.hours_left == null) return el("span", "-", "muted");
+  if (f.overdue) return el("span", "Overdue " + fmtHours(-f.hours_left), "badge bad");
+  return el("span", "Due in " + fmtHours(f.hours_left), f.hours_left < 4 ? "badge warn" : "badge ok");
+}
+
+function kpi(value, label, className) {
+  const box = el("div", null, "kpi " + className);
+  box.append(el("strong", String(value)), el("span", label));
+  return box;
+}
+
+async function loadSummary() {
+  const s = await api("/summary");
+  const open = s.open_by_priority;
+  const kpis = $("kpis");
+  kpis.replaceChildren(
+    ...PRIORITIES.map((p) => kpi(open[p] || 0, p + " open", p)),
+    kpi(s.overdue, "Past SLA", "late" + (s.overdue > 0 ? " hot" : "")),
+    kpi(s.duplicates_merged, "Duplicates merged", "")
+  );
+  const mix = $("mix");
+  mix.replaceChildren(...PRIORITIES.map((p) => {
+    const seg = el("div", null, p);
+    seg.style.flexGrow = open[p] || 0;
+    return seg;
+  }));
+}
+
+function matches(f, q) {
+  return !q || [f.title, f.resource_id, f.owner, f.team].some((v) => (v || "").toLowerCase().includes(q));
 }
 
 async function changeStatus(id, status) {
   await api("/findings/" + id + "/status", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
+    method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }),
   });
   await refresh();
 }
 
-function renderFinding(tbody, f) {
-  const tr = el("tr", null, "row");
-  tr.tabIndex = 0;
-  tr.append(
-    el("td", f.priority, "prio " + f.priority),
-    el("td", String(f.score)),
-    el("td", f.title),
-    el("td", f.resource_id, "resource"),
-    el("td", f.environment),
-    el("td", f.owner),
-    el("td", f.status),
-    el("td", f.occurrences + "x"),
-  );
+function detailRow(f, hidden) {
+  const tr = el("tr", null, "detail" + (hidden ? " hidden" : ""));
+  const td = el("td");
+  td.colSpan = 7;
+  const grid = el("div", null, "grid");
+  for (const [title, tag, items] of [["Why this score", "ul", f.reasons], ["Suggested remediation", "ol", f.remediation]]) {
+    const col = el("div");
+    const list = el(tag);
+    items.forEach((i) => list.append(el("li", i)));
+    col.append(el("h3", title), list);
+    grid.append(col);
+  }
+  const meta = el("div");
+  meta.append(el("h3", "Context"), el("div", "Team: " + f.team + " | Account data: " + f.data_classification));
+  meta.append(el("div", "First seen " + f.first_seen + (f.sla_due ? " | SLA due " + f.sla_due : "")));
+  grid.append(meta);
 
-  const detail = el("tr", null, "detail hidden");
-  const cell = el("td");
-  cell.colSpan = 8;
-  const grid = el("div", null, "detail-grid");
-  grid.append(
-    listSection("Why this score", "ul", f.reasons),
-    listSection("Suggested remediation", "ol", f.remediation),
-  );
   const actions = el("div", null, "actions");
-  for (const status of ["open", "acknowledged", "resolved"]) {
-    if (status === f.status) continue;
-    const btn = el("button", "Mark " + status);
+  [["open", "Reopen"], ["acknowledged", "Acknowledge"], ["resolved", "Resolve"]].forEach(([status, label]) => {
+    if (status === f.status) return;
+    const btn = el("button", label, status === "resolved" ? "primary" : "");
+    btn.type = "button";
     btn.addEventListener("click", () => changeStatus(f.id, status));
     actions.append(btn);
-  }
-  cell.append(grid, actions);
-  detail.append(cell);
-
-  const toggle = () => detail.classList.toggle("hidden");
-  tr.addEventListener("click", toggle);
-  tr.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
   });
+  td.append(grid, actions);
+  tr.append(td);
+  return tr;
+}
+
+function renderRow(tbody, f) {
+  const isOpen = expanded.has(f.id);
+  const tr = el("tr", null, "row" + (isOpen ? " open" : ""));
+  tr.tabIndex = 0;
+  const finding = el("td");
+  finding.append(el("div", f.title, "title"), el("div", f.resource_id, "sub"));
+  const owner = el("td");
+  owner.append(el("div", f.owner), el("div", f.team, "muted"));
+  const env = el("td");
+  env.append(el("span", f.environment, "tag" + (f.environment === "prod" ? " prod" : "")));
+  const prio = el("td");
+  prio.append(el("span", f.priority + " | " + f.score, "pill " + f.priority));
+  const sla = el("td"); sla.append(slaBadge(f));
+  const status = el("td", f.status);
+  const seen = el("td", f.occurrences + (f.occurrences === 1 ? " time" : " times"), "muted");
+  tr.append(prio, finding, env, owner, sla, status, seen);
+
+  const detail = detailRow(f, !isOpen);
+  const toggle = () => {
+    if (expanded.has(f.id)) expanded.delete(f.id); else expanded.add(f.id);
+    detail.classList.toggle("hidden");
+    tr.classList.toggle("open");
+  };
+  tr.addEventListener("click", toggle);
+  tr.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
   tbody.append(tr, detail);
+}
+
+function render() {
+  const q = $("q").value.trim().toLowerCase();
+  const shown = findings.filter((f) => matches(f, q));
+  const tbody = $("rows");
+  tbody.replaceChildren();
+  shown.forEach((f) => renderRow(tbody, f));
+  $("empty").hidden = shown.length > 0;
+  $("count").textContent = shown.length + " of " + findings.length + " findings";
 }
 
 async function loadFindings() {
   const params = new URLSearchParams();
   for (const name of ["priority", "environment", "status"]) {
-    const value = document.getElementById("f-" + name).value;
-    if (value) params.set(name, value);
+    if ($("f-" + name).value) params.set(name, $("f-" + name).value);
   }
-  const findings = await api("/findings?" + params);
-  const tbody = document.getElementById("rows");
-  tbody.replaceChildren();
-  findings.forEach((f) => renderFinding(tbody, f));
-  document.getElementById("empty").hidden = findings.length > 0;
+  if ($("f-overdue").checked) params.set("overdue", "true");
+  findings = await api("/findings?" + params);
+  render();
 }
 
 async function refresh() {
-  await Promise.all([loadSummary(), loadFindings()]);
+  try {
+    await Promise.all([loadSummary(), loadFindings()]);
+    $("updated").textContent = "Updated " + new Date().toLocaleTimeString();
+  } catch (err) {
+    $("updated").textContent = "Could not load: " + err.message;
+  }
 }
 
-document.querySelectorAll(".filters select").forEach((s) => s.addEventListener("change", loadFindings));
-refresh().catch((err) => {
-  document.getElementById("empty").hidden = false;
-  document.getElementById("empty").textContent = "Could not load findings: " + err.message;
-});
+document.querySelectorAll(".toolbar select, #f-overdue").forEach((n) => n.addEventListener("change", loadFindings));
+$("q").addEventListener("input", render);
+$("refresh").addEventListener("click", refresh);
+refresh();
+setInterval(refresh, 30000);
 </script>
 </body>
 </html>
